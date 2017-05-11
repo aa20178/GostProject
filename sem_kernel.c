@@ -77,11 +77,11 @@ SYSCALL_DEFINE2(sem_list,Tinfo *, t, int, tnb)
         
         /* vérifier que strcpy existe dans le noyau, la coder si c'est pas le cas */
         strcpy (t[r].nom, s->nom ); // copie s-> nom dans t[r].nom
-        t[r].prop = s->prop ; // copie sprop dans la Rième case de t 
+        t[r].prop = s->proprietaire ; // copie sprop dans la Rième case de t 
         
         for(j=0; j<s->wait_nb;j++)
           t[r].pids_wait[j] = task_tgid_vnr(s->wait[j]);
-        t[r].pid_wait_nb = s->wait_nb ;
+        t[r].pids_wait_nb = s->wait_nb ;
 	}
     return r;
 }
