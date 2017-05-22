@@ -49,52 +49,55 @@
 #define  MAX_SEM 15
 
 typedef struct sem_t {
-  char nom[ MAX_NOM];
-  uid_t proprietaire;
-  int value;
-  struct task_struct* att [MAX_PID];
-  int att_nb;
-  struct task_struct* wait [MAX_PID];
-  int wait_nb;
-} sem_t ;
-
-#define SEM_LIBRE(s) ((s)->att_nb == 0)
-sem_t sems[MAX_SEM];
-int   sems_nb;
+    char nom[ MAX_NOM];
+    uid_t proprietaire;
+    int value;
+    struct task_struct* att [MAX_PID];
+    int att_nb;
+    struct task_struct* wait [MAX_PID];
+    int wait_nb;
+} sem_t ;  
 
 
-
-SYSCALL_DEFINE2(sem_list,Tinfo *, t, int, tnb)
+SYSCALL_DEFINE2(sem_create,const char __user *, name_arg, int, value_arg) // A changer !!!
 { 
-  int j,i,r;
+  char* tmp = getname(name_arg);
+  if (IS_ERROR(tmp))
+    return PTR_ERR(tmp);
 
-  /* verifier tnb */
-  if (NULL ==t)
-    return -1 ;
-  
-  if (tnb <0 || tnb > MAX_PID -1 )
-    return 0; 
+  /* trouver un sem libre avec une fonction en statique, sinon renvoie error else continuer*/
+
+  /*
+  char* tmp = getname(name_arg);
+  if (IS_ERROR(tmp))
+    return PTR_ERR(tmp);
+  */
+
+  int i = 0;
+  char *tmp =  getname(name_arg);
+  if (IS_ERROR(tmp))
+    return PTR_ERR(tmp);
+
+  if (NULL == name)
+    return -E_EXIST;//??? 
   if (access_ok(VERIFY_READ,t, (sizeof(*t)) * tnb))
     return -EFAULT;
- 
-	/* vérifier que t jusqua t+tnb est une zone user valide (getuser..) */
-  
-	/* transfert des sems[i] dans t[r] */
-  for(i =0,r=0 ; i<MAX_SEM && r<tnb;i++)
-    {
-      sem_t* s = sems +i; 
-        if  (!SEM_LIBRE(s) ) return -1 ;
-      if  (SEM_LIBRE(s) ) continue ;
-      
-      /* vérifier que strcpy existe dans le noyau, la coder si c'est pas le cas */
-      strcpy (t[r].nom, s->nom ); // copie s-> nom dans t[r].nom
-      t[r].prop = s->proprietaire ; // copie sprop dans la Rième case de t 
-      
-      for(j=0; j<s->wait_nb;j++)
-	t[r].pids_wait[j] = task_tgid_vnr(s->wait[j]);
-      t[r].pids_wait_nb = s->wait_nb ;
-    }
-  return r;
-}
+  if (value <1) 
+   return -EINVAL;
+  if (att_nb > MAX_PID)
+    return -E_EOVERFLOW ;
+  if (wait_nb > MAX_PID)
+    return -E_EOVERFLOW ;
 
-    
+  //atacher le processus qui lance la création 
+  sem_t s ;
+  //  faire une copie du nom 
+  s.propriétaire = current-> uid ;
+  s.value = value_arg; 
+  //s.att =  ?
+  
+  putname(tmp);
+
+	}
+return 0;//?
+}
